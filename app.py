@@ -1,11 +1,15 @@
 import streamlit as st
-import openai
+from openai import OpenAI
 
-openai.api_key = st.secrets["OPENAI_API_KEY"]  # Store this safely in secrets
+# Load API key from Streamlit secrets
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
+# App title and intro
+st.set_page_config(page_title="Mindful English", page_icon="🧘‍♀️")
 st.title("🧘‍♀️ Mindful English")
-st.write("Practice English and mindfulness in one gentle space.")
+st.write("Practice English while reflecting mindfully. Get kind, constructive feedback from an AI language coach.")
 
+# Prompt options
 prompt = st.selectbox(
     "Choose a reflection prompt:",
     [
@@ -16,18 +20,22 @@ prompt = st.selectbox(
     ]
 )
 
-user_input = st.text_area("Write a short answer in English:")
+# Text input
+user_input = st.text_area("Write a short response in English:")
 
+# Button to trigger AI feedback
 if st.button("Get gentle feedback") and user_input:
     with st.spinner("Thinking kind thoughts..."):
+        # System message to instruct the assistant
         system_msg = (
             "You are a kind English tutor and mindfulness coach. "
-            "When the user writes, gently correct or paraphrase their text. "
-            "Encourage them with a soft, affirming message too."
+            "When the user writes, gently correct or paraphrase their text in natural English. "
+            "Offer an affirming message to support their confidence."
         )
 
-        response = openai.ChatCompletion.create(
-            model="gpt-4",  # or "gpt-3.5-turbo"
+        # Call the OpenAI Chat Completion API
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",  # or "gpt-4" if your key has access
             messages=[
                 {"role": "system", "content": system_msg},
                 {"role": "user", "content": f"Prompt: {prompt}\nUser text: {user_input}"}
@@ -35,6 +43,9 @@ if st.button("Get gentle feedback") and user_input:
             temperature=0.7
         )
 
-        feedback = response['choices'][0]['message']['content']
+        # Extract the response content
+        feedback = response.choices[0].message.content
+
+        # Show the result
         st.success("Here’s your reflection:")
         st.markdown(feedback)
